@@ -3,9 +3,9 @@
 use crate::colors;
 use crate::config;
 use colors::Colors;
-
 use crossterm::style::Print;
 use rand::{random, Rng};
+use std::io::Stdout;
 
 // enums
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -17,6 +17,20 @@ pub enum CellStatus {
 pub enum ClickStatus {
     Not,
     Defusing,
+    Flag,
+}
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum PlayerMoves {
+    Stay, // nothing
+
+    Top,
+    Right,
+    Bottom,
+    Left,
+
+    // Defuse {E}
+    Defuse,
+    // Flag {Q}
     Flag,
 }
 
@@ -32,12 +46,16 @@ pub struct Location {
 //     pub(crate) fg_color: Colors,
 //     pub(crate) bg_color: Colors,
 // }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Cell {
     pub(crate) status: CellStatus,
     pub(crate) click: ClickStatus,
     pub(crate) location: Location,
     // pub(crate) color: Color,
+}
+pub struct Player {
+    pub location: Location,
+    pub next_move: PlayerMoves,
 }
 
 pub struct Playground {
@@ -47,18 +65,25 @@ pub struct Playground {
     pub height: u16,
 
     pub cells: Vec<Cell>,
+
+    pub player: Player,
     // pub cells: Vec<(u16, u16)>,
 }
 
 // happy happy happy
 impl Playground {
     pub fn new(max_x: u16, max_y: u16) -> Playground {
+        let player = Player {
+            location: Location { x: 1, y: 1 },
+            next_move:PlayerMoves::
+        };
         return Playground {
             screen_width: max_x,
             screen_height: max_y,
             width: 0,
             height: 0,
             cells: vec![],
+            player,
         };
     }
 
@@ -88,11 +113,8 @@ impl Playground {
             let cell = self.get_cell(random_index);
 
             if cell.status == CellStatus::Safe {
-                let new_cell = Cell {
-                    status: CellStatus::Bomb,
-                    click: cell.click.clone(),
-                    location: cell.location.clone(),
-                };
+                let mut new_cell = cell.clone();
+                new_cell.status = CellStatus::Bomb;
 
                 self.update_cell(new_cell);
                 bombs_planted += 1;
@@ -119,4 +141,41 @@ impl Playground {
 
         self.cells[index] = cell;
     }
+
+    pub fn move_player(&mut self,_x:i16,_y:i16){
+        let x = self.player.location.x as i16+_x;
+        let y = self.player.location.y as i16+_y;
+        //check NOT out of playground range
+        let top_correct=y>=0;
+        let right_correct = x<self.width as i16;
+        let botttom_correct = y<self.height as i16;
+        let left_correct = x>=0;
+        let check_all = top_correct && right_correct && botttom_correct && left_correct;
+        if check_all{
+            // move player
+            self.player.location.x = x as u16;
+            self.player.location.y = y as u16;
+        }
+    }
+
+    pub fn player_action(&mut self){
+        match self.player.next_move {
+            PlayerMoves::Stay=>{}
+
+            PlayerMoves::Top=>{self.move_player(0, -1)}
+            PlayerMoves::Right=>{self.move_player(1, 0)}
+            PlayerMoves::Bottom =>{self.move_player(0, 1)}
+            PlayerMoves::Left=>{self.move_player(-1, 0)}
+
+            PlayerMoves::Defuse=>{self.defuse_cell()}
+            PlayerMoves::Flag=>{self.flag_cell()}
+        }
+        // after doing player action, we stay afk until next action by player
+        self.player.next_move=PlayerMoves::Stay;
+    }
+
+
+    pub fn defuse_cell(&mut self){}
+    pub fn flag_cell(&mut self){}
+    
 }
