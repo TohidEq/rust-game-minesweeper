@@ -75,7 +75,7 @@ impl Playground {
     pub fn new(max_x: u16, max_y: u16) -> Playground {
         let player = Player {
             location: Location { x: 1, y: 1 },
-            next_move:PlayerMoves::
+            next_move: PlayerMoves::Stay,
         };
         return Playground {
             screen_width: max_x,
@@ -142,40 +142,38 @@ impl Playground {
         self.cells[index] = cell;
     }
 
-    pub fn move_player(&mut self,_x:i16,_y:i16){
-        let x = self.player.location.x as i16+_x;
-        let y = self.player.location.y as i16+_y;
+    pub fn move_player(&mut self, _x: i16, _y: i16) {
+        let x = self.player.location.x as i16 + _x;
+        let y = self.player.location.y as i16 + _y;
         //check NOT out of playground range
-        let top_correct=y>=0;
-        let right_correct = x<self.width as i16;
-        let botttom_correct = y<self.height as i16;
-        let left_correct = x>=0;
+        let top_correct = y >= 0;
+        let right_correct = x < self.width as i16;
+        let botttom_correct = y < self.height as i16;
+        let left_correct = x >= 0;
         let check_all = top_correct && right_correct && botttom_correct && left_correct;
-        if check_all{
+        if check_all {
             // move player
             self.player.location.x = x as u16;
             self.player.location.y = y as u16;
         }
     }
 
-    pub fn player_action(&mut self){
+    pub fn player_action(&mut self) {
         match self.player.next_move {
-            PlayerMoves::Stay=>{}
+            PlayerMoves::Stay => {}
 
-            PlayerMoves::Top=>{self.move_player(0, -1)}
-            PlayerMoves::Right=>{self.move_player(1, 0)}
-            PlayerMoves::Bottom =>{self.move_player(0, 1)}
-            PlayerMoves::Left=>{self.move_player(-1, 0)}
+            PlayerMoves::Top => self.move_player(0, -1),
+            PlayerMoves::Right => self.move_player(1, 0),
+            PlayerMoves::Bottom => self.move_player(0, 1),
+            PlayerMoves::Left => self.move_player(-1, 0),
 
-            PlayerMoves::Defuse=>{self.defuse_cell()}
-            PlayerMoves::Flag=>{self.flag_cell()}
+            PlayerMoves::Defuse => self.defuse_cell(),
+            PlayerMoves::Flag => self.flag_cell(),
         }
         // after doing player action, we stay afk until next action by player
-        self.player.next_move=PlayerMoves::Stay;
+        self.player.next_move = PlayerMoves::Stay;
     }
 
-
-    pub fn defuse_cell(&mut self){}
-    pub fn flag_cell(&mut self){}
-    
+    pub fn defuse_cell(&mut self) {}
+    pub fn flag_cell(&mut self) {}
 }
