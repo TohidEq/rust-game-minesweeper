@@ -324,12 +324,13 @@ impl Playground {
         let cell_index = self.get_index(self.player.location.x, self.player.location.y);
         let flagging_cell = self.get_cell(cell_index);
         let check_cell_action_is_noting = flagging_cell.click == ClickStatus::Noting;
-
-        self.cells[cell_index].click = if check_cell_action_is_noting {
-            ClickStatus::Flaged // cell flaged
-        } else {
-            ClickStatus::Noting // cell unflaged
-        };
+        if flagging_cell.click != ClickStatus::Defused {
+            self.cells[cell_index].click = if check_cell_action_is_noting {
+                ClickStatus::Flaged // cell flaged
+            } else {
+                ClickStatus::Noting // cell unflaged
+            };
+        }
     }
 
     pub fn defuse_cell(&mut self, _x: u16, _y: u16) -> bool {
@@ -492,6 +493,17 @@ impl Playground {
         x = 1 + 1 + 1 + 1 + 1 + 1 + 1;
         y = 0; // ▼
         let mut text = String::from(time.to_string()).white();
+
+        text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+        text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
+
+        sc.queue(MoveTo(x, y))
+            .unwrap()
+            .queue(Print(text.bold()))
+            .unwrap();
+        x = 1;
+        y = 1; // ▼
+        let mut text = String::from("E=Defuse   F=Flag   Q=exit").white();
 
         text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
         text = Colors::bg_color(&config::STATUS_COLOR_BG, text);

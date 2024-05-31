@@ -35,7 +35,7 @@ pub const PLAYER_DEFUSED_COLOR_FG: Colors = Colors::Black;
 pub const PLAYER_DEFUSED_COLOR_BG: Colors = Colors::Black;
 
 pub const PLAYER_FLAG_COLOR_FG: Colors = Colors::Black;
-pub const PLAYER_FLAG_COLOR_BG: Colors = Colors::Black;
+pub const PLAYER_FLAG_COLOR_BG: Colors = Colors::Green;
 
 pub const BOMB_COLOR_FG: Colors = Colors::Black;
 pub const BOMB_COLOR_BG: Colors = Colors::Red;

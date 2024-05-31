@@ -1,12 +1,14 @@
 use std::io::{self, stdout, Write};
 
+use colors::Colors;
 use crossterm::{
-    cursor::{Hide, Show},
+    cursor::{Hide, MoveTo, Show},
     event::{poll, read, Event, KeyCode},
+    style::{Print, Stylize},
     terminal::{self, disable_raw_mode, enable_raw_mode, size},
-    ExecutableCommand,
+    ExecutableCommand, QueueableCommand,
 };
-use playground::{PlayerMoves, Playground};
+use playground::{PlayerMoves, PlayerStatus, Playground};
 use std::{thread, time};
 pub mod colors;
 pub mod config;
@@ -96,6 +98,12 @@ fn main() -> io::Result<()> {
                             KeyCode::Char('d') => {
                                 playground.player.next_move = PlayerMoves::Right;
                             }
+                            KeyCode::Char('e') => {
+                                playground.player.next_move = PlayerMoves::Defuse;
+                            }
+                            KeyCode::Char('f') => {
+                                playground.player.next_move = PlayerMoves::Flag;
+                            }
                             _ => {}
                         },
                         _ => {}
@@ -109,7 +117,11 @@ fn main() -> io::Result<()> {
                 if playground_frame == 0 {
                     playground_time += 1;
                 }
+
                 playground.player_action();
+                if playground.player.status == PlayerStatus::Dead {
+                    status = Status::End;
+                }
 
                 // ---- end physics
 
@@ -123,6 +135,21 @@ fn main() -> io::Result<()> {
             }
             Status::Pause => {}
             Status::End => {
+                sc.execute(terminal::Clear(terminal::ClearType::All))?;
+
+                let mut x = 1;
+                let mut y = 0; // ▼
+                let mut text = String::from("U LOST! :(((").white();
+
+                text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+                text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
+
+                sc.queue(MoveTo(x, y))
+                    .unwrap()
+                    .queue(Print(text.bold()))
+                    .unwrap();
+                sc.flush().unwrap();
+
                 let millis = time::Duration::from_millis(800);
                 thread::sleep(millis);
 
