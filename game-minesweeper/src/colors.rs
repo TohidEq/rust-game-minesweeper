@@ -7,11 +7,14 @@ pub enum Colors {
     Red,
     Green,
     Yellow,
+    DarkBlue,
+    Brown,
     Blue,
     Magenta,
     Purple,
     Cyan,
     White,
+    Grey,
 }
 
 impl Colors {
@@ -44,6 +47,15 @@ impl Colors {
             Colors::White => {
                 return text.on_white();
             }
+            Colors::DarkBlue => {
+                return text.on_dark_blue();
+            }
+            Colors::Brown => {
+                return text.on_dark_red();
+            }
+            Colors::Grey => {
+                return text.on_grey();
+            }
         }
     }
 
@@ -75,6 +87,15 @@ impl Colors {
             }
             Colors::White => {
                 return text.white();
+            }
+            Colors::DarkBlue => {
+                return text.dark_blue();
+            }
+            Colors::Brown => {
+                return text.dark_red();
+            }
+            Colors::Grey => {
+                return text.grey();
             }
         }
     }

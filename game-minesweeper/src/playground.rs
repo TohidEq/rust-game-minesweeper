@@ -10,6 +10,7 @@ use crossterm::style::Stylize;
 use crossterm::QueueableCommand;
 use rand::seq::index;
 use rand::{random, Rng};
+use std::cell;
 use std::io::Stdout;
 use std::io::Write;
 
@@ -54,15 +55,19 @@ pub struct Location {
     pub y: u16,
 }
 // no colors yet, just logic
-// pub struct Color {
-//     pub(crate) fg_color: Colors,
-//     pub(crate) bg_color: Colors,
-// }
+
+#[derive(Copy, Clone, Debug)]
+pub struct Color {
+    pub(crate) fg_color: Colors,
+    pub(crate) bg_color: Colors,
+}
+
 #[derive(Debug, Clone)]
 pub struct Cell {
     pub(crate) status: CellStatus, // bomb || safe
     pub(crate) click: ClickStatus, // Noting || Defused || Flaged
     pub(crate) location: Location,
+
     // pub(crate) color: Color,
     pub(crate) bomb_helper: u16, // bombs number around the cell
 }
@@ -89,7 +94,7 @@ pub struct Playground {
 impl Playground {
     pub fn new(max_x: u16, max_y: u16) -> Playground {
         let player = Player {
-            location: Location { x: 1, y: 1 },
+            location: Location { x: 3, y: 3 },
             next_move: PlayerMoves::Stay,
             status: PlayerStatus::Alive,
         };
@@ -199,6 +204,10 @@ impl Playground {
                     status: CellStatus::Safe,
                     click: ClickStatus::Noting,
                     location: Location { x, y },
+                    // color: Color {
+                    //     fg_color: config::PLAYGROUND_COLOR_FG,
+                    //     bg_color: config::PLAYGROUND_COLOR_BG,
+                    // },
                     bomb_helper: 0,
                 })
             }
@@ -338,20 +347,68 @@ impl Playground {
     pub fn draw_playground(&mut self, sc: &mut Stdout) {
         for cell in &self.cells {
             let mut my_str = " ";
+            let mut color: Color = Color {
+                fg_color: config::PLAYER_FLAG_COLOR_FG,
+                bg_color: config::PLAYER_FLAG_COLOR_BG,
+            };
             let bomb_helper_str = &cell.bomb_helper.to_string();
 
             match cell.click {
                 ClickStatus::Noting => {
+                    color.fg_color = config::PLAYGROUND_COLOR_FG;
+                    color.bg_color = config::PLAYGROUND_COLOR_BG;
                     my_str = config::UNCLICKED_CHAR;
                 }
                 ClickStatus::Defused => {
                     if cell.bomb_helper == 0 {
+                        color.fg_color = config::PLAYER_DEFUSED_COLOR_FG;
+                        color.bg_color = config::PLAYER_DEFUSED_COLOR_BG;
                         my_str = config::EMPTY_CHAR;
                     } else {
+                        match bomb_helper_str.as_str() {
+                            "1" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_1;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_1;
+                            }
+                            "2" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_2;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_2;
+                            }
+                            "3" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_3;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_3;
+                            }
+                            "4" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_4;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_4;
+                            }
+                            "5" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_5;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_5;
+                            }
+                            "6" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_6;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_6;
+                            }
+                            "7" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_7;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_7;
+                            }
+                            "8" => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_8;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_8;
+                            }
+                            _ => {
+                                color.fg_color = config::BOMB_HELPER_COLOR_FG_1;
+                                color.bg_color = config::BOMB_HELPER_COLOR_BG_1;
+                            }
+                        }
                         my_str = bomb_helper_str;
                     }
                 }
                 ClickStatus::Flaged => {
+                    color.fg_color = config::PLAYER_FLAG_COLOR_FG;
+                    color.bg_color = config::PLAYER_FLAG_COLOR_BG;
                     my_str = config::FLAG_CHAR;
                 }
             }
@@ -367,8 +424,33 @@ impl Playground {
             // my_str = " ";
 
             let mut text = String::from(my_str).white().on_black();
+            text = Colors::fg_color(&color.fg_color, text);
+            text = Colors::bg_color(&color.bg_color, text);
+
+            if config::SELECT_COL_ROW_OR_CELL == true {
+                if cell.location.y == self.player.location.y
+                    || cell.location.x == self.player.location.x
+                {
+                    text = Colors::bg_color(&config::PLAYER_SELECT_COLOR_BG, text);
+                    text = Colors::fg_color(&config::PLAYER_SELECT_COLOR_FG, text);
+                }
+            } else {
+                if cell.location.y == self.player.location.y
+                    && cell.location.x == self.player.location.x
+                {
+                    text = Colors::bg_color(&config::PLAYER_SELECT_COLOR_BG, text);
+                    text = Colors::fg_color(&config::PLAYER_SELECT_COLOR_FG, text);
+                }
+            }
             // set color for each number(bomb helper)
             Playground::draw_cell(&cell, text, sc);
+        }
+    }
+
+    pub fn draw_player(&mut self, sc: &mut Stdout) {
+        for y in 0..self.height {
+            let index = self.get_index(self.player.location.x, y);
+            let cell = self.get_cell(index);
         }
     }
 
@@ -393,5 +475,30 @@ impl Playground {
         // .unwrap()
         // .queue(Print(text.clone()))
         // .unwrap();
+    }
+
+    pub fn draw_status_bar(&mut self, sc: &mut Stdout, time: u16) {
+        let mut x = 1;
+        let mut y = 0; // ▼
+        let mut text = String::from("Time:").white();
+
+        text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+        text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
+
+        sc.queue(MoveTo(x, y))
+            .unwrap()
+            .queue(Print(text.bold()))
+            .unwrap();
+        x = 1 + 1 + 1 + 1 + 1 + 1 + 1;
+        y = 0; // ▼
+        let mut text = String::from(time.to_string()).white();
+
+        text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+        text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
+
+        sc.queue(MoveTo(x, y))
+            .unwrap()
+            .queue(Print(text.bold()))
+            .unwrap();
     }
 }
