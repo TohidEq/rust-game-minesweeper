@@ -309,13 +309,14 @@ impl Playground {
             write:
                 user can defuse cells that are defused and bombs flagged around them
         */
-
-        if defusing_cell.status == CellStatus::Safe {
-            // log defused
-            self.cells[cell_index].click = ClickStatus::Defused;
-        } else {
-            // not defused, log u r dead...
-            self.player.status = PlayerStatus::Dead;
+        if defusing_cell.click == ClickStatus::Noting {
+            if defusing_cell.status == CellStatus::Safe {
+                // log defused
+                self.cells[cell_index].click = ClickStatus::Defused;
+            } else {
+                // not defused, log u r dead...
+                self.player.status = PlayerStatus::Dead;
+            }
         }
     }
 
