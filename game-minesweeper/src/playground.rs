@@ -3,10 +3,15 @@
 use crate::colors;
 use crate::config;
 use colors::Colors;
+use crossterm::cursor::MoveTo;
 use crossterm::style::Print;
+use crossterm::style::StyledContent;
+use crossterm::style::Stylize;
+use crossterm::QueueableCommand;
 use rand::seq::index;
 use rand::{random, Rng};
 use std::io::Stdout;
+use std::io::Write;
 
 // enums
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -55,8 +60,8 @@ pub struct Location {
 // }
 #[derive(Debug, Clone)]
 pub struct Cell {
-    pub(crate) status: CellStatus,
-    pub(crate) click: ClickStatus,
+    pub(crate) status: CellStatus, // bomb || safe
+    pub(crate) click: ClickStatus, // Noting || Defused || Flaged
     pub(crate) location: Location,
     // pub(crate) color: Color,
     pub(crate) bomb_helper: u16, // bombs number around the cell
@@ -226,7 +231,7 @@ impl Playground {
         }
 
         // LOG
-        println!("cells: {:?}", self.cells);
+        // println!("cells: {:?}", self.cells);
     }
 
     pub fn get_index(&mut self, _x: u16, _y: u16) -> usize {
@@ -328,5 +333,65 @@ impl Playground {
         }
 
         return false; // not defused
+    }
+
+    pub fn draw_playground(&mut self, sc: &mut Stdout) {
+        for cell in &self.cells {
+            let mut my_str = " ";
+            let bomb_helper_str = &cell.bomb_helper.to_string();
+
+            match cell.click {
+                ClickStatus::Noting => {
+                    my_str = config::UNCLICKED_CHAR;
+                }
+                ClickStatus::Defused => {
+                    if cell.bomb_helper == 0 {
+                        my_str = config::EMPTY_CHAR;
+                    } else {
+                        my_str = bomb_helper_str;
+                    }
+                }
+                ClickStatus::Flaged => {
+                    my_str = config::FLAG_CHAR;
+                }
+            }
+
+            // if cell.status == CellStatus::Bomb {
+            //     my_str = config::BOMB_CHAR;
+            // } else {
+            //     my_str = bomb_helper_str;
+            //     if my_str == "0" {
+            //         my_str = config::UNCLICKED_CHAR;
+            //     }
+            // }
+            // my_str = " ";
+
+            let mut text = String::from(my_str).white().on_black();
+            // set color for each number(bomb helper)
+            Playground::draw_cell(&cell, text, sc);
+        }
+    }
+
+    pub fn draw_cell(cell: &Cell, text: StyledContent<String>, sc: &mut Stdout) {
+        // let mut text = String::from(&cell.text).white().on_black();
+
+        //
+        // text = Colors::fg_color(&cell.color.fg_color, text);
+        // text = Colors::bg_color(&cell.color.bg_color, text);
+        //
+
+        let _x = cell.location.x + config::MARGIN_LEFT;
+        let _y = cell.location.y + config::MARGIN_TOP;
+
+        sc.queue(MoveTo(_x, _y))
+            .unwrap()
+            .queue(Print(text.clone()))
+            .unwrap();
+        // refresh page
+        sc.flush().unwrap();
+        // .queue(MoveTo(_x + 1, _y))
+        // .unwrap()
+        // .queue(Print(text.clone()))
+        // .unwrap();
     }
 }
