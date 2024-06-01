@@ -503,12 +503,46 @@ impl Playground {
             .queue(Print(text.bold()))
             .unwrap();
         x = 1;
-        y = 1; // ▼
+        y = self.height + 4; // ▼
         let mut text = String::from("E=Defuse   F=Flag   Q=exit").white();
 
         text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
         text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
 
+        sc.queue(MoveTo(x, y))
+            .unwrap()
+            .queue(Print(text.bold()))
+            .unwrap();
+
+        x = 18;
+        y = 1; // ▼
+        let mut flag_counter: u16 = 0;
+        for cell in &self.cells {
+            if cell.click == ClickStatus::Flaged {
+                flag_counter += 1;
+            }
+        }
+
+        let mut text = String::from(format!("Flags: {}", flag_counter)).white();
+
+        text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+        text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
+        sc.queue(MoveTo(x, y))
+            .unwrap()
+            .queue(Print(text.bold()))
+            .unwrap();
+
+        x = 1;
+        y = 1; // ▼
+
+        let mut text = String::from(format!(
+            "Total Bombs: {}",
+            ((config::BOMB_RATE * self.cells.len() as u16) / 100) // calc bombs
+        ))
+        .white();
+
+        text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
+        text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
         sc.queue(MoveTo(x, y))
             .unwrap()
             .queue(Print(text.bold()))
