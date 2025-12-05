@@ -6,12 +6,12 @@ pub const GAME_SPEED: u16 = 10;
 pub const EMPTY_CHAR: &str = "░";
 pub const UNCLICKED_CHAR: &str = "▓";
 pub const BOMB_CHAR: &str = "☠";
-pub const FLAG_CHAR: &str = "F";
+pub const FLAG_CHAR: &str = "󰈿";
 // true = col and row will get color(selection) , false = only selected cell will get color
 pub const SELECT_COL_ROW_OR_CELL: bool = false;
 
 // 0: no bomb, 100: full bomb
-pub const BOMB_RATE: u16 = 10;
+pub const BOMB_RATE: u16 = 18;
 
 // (%)   100% W == half screen
 pub const PLAYGROUND_WITH: u16 = 100;

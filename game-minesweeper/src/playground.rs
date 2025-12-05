@@ -252,7 +252,12 @@ impl Playground {
         return &self.cells[index];
     }
 
-    // myb we can delete this... myb...
+    pub fn get_cell_mut(&mut self, index: usize) -> &mut Cell {
+        &mut self.cells[index]
+    }
+
+    /*
+    // NOT USED YET :(
     pub fn update_cell(&mut self, cell: Cell) {
         let x = cell.location.x;
         let y = cell.location.y;
@@ -260,6 +265,7 @@ impl Playground {
 
         self.cells[index] = cell;
     }
+    */
 
     pub fn in_playground_range(&mut self, x: i16, y: i16) -> bool {
         //check NOT out of playground range
@@ -299,24 +305,81 @@ impl Playground {
         self.player.next_move = PlayerMoves::Stay;
     }
 
-    // player selected cell -> defuse
-    pub fn defuse_action(&mut self) {
-        let cell_index = self.get_index(self.player.location.x, self.player.location.y);
+    /*
+    // NOT USED YET :(
+    pub fn defuse_cell(&mut self, _x: u16, _y: u16) -> bool {
+        let cell_index = self.get_index(_x, _y);
         let defusing_cell = self.get_cell(cell_index);
 
-        /*
-        NOTE:
-            write:
-                user can defuse cells that are defused and bombs flagged around them
-        */
-        if defusing_cell.click == ClickStatus::Noting {
-            if defusing_cell.status == CellStatus::Safe {
-                // log defused
-                self.cells[cell_index].click = ClickStatus::Defused;
-            } else {
-                // not defused, log u r dead...
-                self.player.status = PlayerStatus::Dead;
+        if defusing_cell.status == CellStatus::Safe && defusing_cell.click == ClickStatus::Noting {
+            self.cells[cell_index].click = ClickStatus::Defused;
+            return true; // defused succesful
+        }
+
+        return false; // not defused
+    }
+    */
+
+
+
+    pub fn flood_defuse(&mut self, x: u16, y: u16) {
+        if !self.in_playground_range(x as i16, y as i16) {
+            return;
+        }
+
+        let cell_index = self.get_index(x, y);
+        let cell = self.get_cell_mut(cell_index);
+
+        if cell.click != ClickStatus::Noting {
+            return;
+        }
+
+        cell.click = ClickStatus::Defused;
+
+        if cell.bomb_helper > 0 {
+            return;
+        }
+
+
+
+
+        // check n clear 6 directions
+        //let dirs = [
+        //    (-1, -1), (0, -1), (1, -1),
+        //    (-1,  0),         (1,  0),
+        //    (-1,  1), (0,  1), (1,  1),
+        //];
+
+        // check n clear 4 directions
+        let dirs = [
+                    (0, -1),
+            (-1,  0),         (1,  0),
+                    (0,  1)
+        ];
+
+
+        for (dx, dy) in dirs {
+            let nx = x as i16 + dx;
+            let ny = y as i16 + dy;
+            if self.in_playground_range(nx, ny) {
+                self.flood_defuse(nx as u16, ny as u16);
             }
+        }
+    }
+
+
+    pub fn defuse_action(&mut self) {
+        let cell_index = self.get_index(self.player.location.x, self.player.location.y);
+        let cell = self.get_cell_mut(cell_index);
+
+        if cell.click != ClickStatus::Noting {
+            return;
+        }
+
+        if cell.status == CellStatus::Bomb {
+            self.player.status = PlayerStatus::Dead;
+        } else {
+            self.flood_defuse(self.player.location.x, self.player.location.y);
         }
     }
 
@@ -332,18 +395,6 @@ impl Playground {
                 ClickStatus::Noting // cell unflaged
             };
         }
-    }
-
-    pub fn defuse_cell(&mut self, _x: u16, _y: u16) -> bool {
-        let cell_index = self.get_index(_x, _y);
-        let defusing_cell = self.get_cell(cell_index);
-
-        if defusing_cell.status == CellStatus::Safe && defusing_cell.click == ClickStatus::Noting {
-            self.cells[cell_index].click = ClickStatus::Defused;
-            return true; // defused succesful
-        }
-
-        return false; // not defused
     }
 
     pub fn draw_playground(&mut self, sc: &mut Stdout) {
