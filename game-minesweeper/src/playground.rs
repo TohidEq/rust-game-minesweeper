@@ -42,6 +42,7 @@ pub enum PlayerMoves {
 }
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum PlayerStatus {
+    FirstMove,
     Alive,
     Dead,
     Victory,
@@ -96,7 +97,7 @@ impl Playground {
         let player = Player {
             location: Location { x: 3, y: 3 },
             next_move: PlayerMoves::Stay,
-            status: PlayerStatus::Alive,
+            status: PlayerStatus::FirstMove,
         };
         return Playground {
             screen_width: max_x,
@@ -322,7 +323,8 @@ impl Playground {
 
 
 
-    pub fn flood_defuse(&mut self, x: u16, y: u16) {
+    pub fn flood_defuse(&mut self, x: u16, y: u16, first_move: bool) {
+
         if !self.in_playground_range(x as i16, y as i16) {
             return;
         }
@@ -333,10 +335,11 @@ impl Playground {
         if cell.click != ClickStatus::Noting {
             return;
         }
-
-        cell.click = ClickStatus::Defused;
-
-        if cell.bomb_helper > 0 {
+        if cell.status == CellStatus::Safe{
+            cell.click = ClickStatus::Defused;
+        }
+        
+        if !first_move && cell.bomb_helper > 0 {
             return;
         }
 
@@ -344,31 +347,33 @@ impl Playground {
 
 
         // check n clear 6 directions
-        //let dirs = [
-        //    (-1, -1), (0, -1), (1, -1),
-        //    (-1,  0),         (1,  0),
-        //    (-1,  1), (0,  1), (1,  1),
-        //];
+        let dirs = [
+            (-1, -1), (0, -1), (1, -1),
+            (-1,  0),         (1,  0),
+            (-1,  1), (0,  1), (1,  1),
+        ];
 
         // check n clear 4 directions
-        let dirs = [
-                    (0, -1),
-            (-1,  0),         (1,  0),
-                    (0,  1)
-        ];
+        //let dirs = [
+        //            (0, -1),
+        //    (-1,  0),         (1,  0),
+        //            (0,  1)
+        //];
 
 
         for (dx, dy) in dirs {
             let nx = x as i16 + dx;
             let ny = y as i16 + dy;
             if self.in_playground_range(nx, ny) {
-                self.flood_defuse(nx as u16, ny as u16);
+                self.flood_defuse(nx as u16, ny as u16,false);
             }
         }
     }
 
 
     pub fn defuse_action(&mut self) {
+        let is_first_move = self.player.status==PlayerStatus::FirstMove;
+
         let cell_index = self.get_index(self.player.location.x, self.player.location.y);
         let cell = self.get_cell_mut(cell_index);
 
@@ -379,7 +384,12 @@ impl Playground {
         if cell.status == CellStatus::Bomb {
             self.player.status = PlayerStatus::Dead;
         } else {
-            self.flood_defuse(self.player.location.x, self.player.location.y);
+            if is_first_move{
+                self.player.status = PlayerStatus::Alive;
+                self.flood_defuse(self.player.location.x, self.player.location.y, true);
+            }else{
+                self.flood_defuse(self.player.location.x, self.player.location.y, false);
+            }
         }
     }
 
@@ -413,7 +423,7 @@ impl Playground {
                     my_str = config::UNCLICKED_CHAR;
                 }
                 ClickStatus::Defused => {
-                    if cell.bomb_helper == 0 {
+                    if bomb_helper_str.as_str() == "0" {
                         color.fg_color = config::PLAYER_DEFUSED_COLOR_FG;
                         color.bg_color = config::PLAYER_DEFUSED_COLOR_BG;
                         my_str = config::EMPTY_CHAR;
