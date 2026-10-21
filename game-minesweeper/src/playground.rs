@@ -13,6 +13,7 @@ use rand::{random, Rng};
 use std::cell;
 use std::io::Stdout;
 use std::io::Write;
+use std::time::Instant;
 
 // enums
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -89,6 +90,7 @@ pub struct Playground {
 
     pub player: Player,
     // pub cells: Vec<(u16, u16)>,
+    pub start_time: Instant,
 }
 
 // happy happy happy
@@ -106,6 +108,7 @@ impl Playground {
             height: 0,
             cells: vec![],
             player,
+            start_time: Instant::now(),
         };
     }
     pub fn number_of_bombs_around_cell(&mut self, _x: u16, _y: u16) -> u16 {
@@ -385,6 +388,10 @@ impl Playground {
         }
 
         if cell.status == CellStatus::Bomb {
+            if is_first_move {
+                cell.click = ClickStatus::Flaged;
+                return;
+            }
             self.player.status = PlayerStatus::Dead;
         } else {
             if is_first_move{
@@ -543,7 +550,8 @@ impl Playground {
         // .unwrap();
     }
 
-    pub fn draw_status_bar(&mut self, sc: &mut Stdout, time: u16) {
+    pub fn draw_status_bar(&mut self, sc: &mut Stdout) {
+        let time: u16 = self.start_time.elapsed().as_secs() as u16;
         let mut x = 1;
         let mut y = 0; // ▼
         let mut text = String::from("Time:").white();

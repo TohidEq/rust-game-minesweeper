@@ -26,8 +26,6 @@ pub enum Status {
 fn main() -> io::Result<()> {
     let mut sc = stdout();
     let mut status = Status::Run;
-    let mut playground_frame = config::GAME_SPEED;
-    let mut playground_time = 0;
 
     // clear screen
     sc.execute(terminal::Clear(terminal::ClearType::All))?;
@@ -46,7 +44,6 @@ fn main() -> io::Result<()> {
 
     // main loog
     loop {
-        playground_frame -= 1;
         match status {
             Status::New => {}
             Status::Run => {
@@ -114,9 +111,6 @@ fn main() -> io::Result<()> {
 
                 // ----
                 // -> physics
-                if playground_frame == 0 {
-                    playground_time += 1;
-                }
 
                 playground.player_action();
                 if playground.player.status == PlayerStatus::Dead {
@@ -127,7 +121,7 @@ fn main() -> io::Result<()> {
 
                 // ----
                 // -> drawing
-                playground.draw_status_bar(&mut sc, playground_time);
+                playground.draw_status_bar(&mut sc);
                 playground.draw_playground(&mut sc);
                 // playground.draw_border(&mut sc);
                 sc.flush()?;
@@ -159,9 +153,6 @@ fn main() -> io::Result<()> {
                 disable_raw_mode()?;
                 break;
             }
-        }
-        if playground_frame == 0 {
-            playground_frame = config::GAME_SPEED
         }
     }
 

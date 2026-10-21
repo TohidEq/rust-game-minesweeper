@@ -45,23 +45,7 @@ Run inside game-minesweeper folder
 cargo run
 ```
 
-## Wanna faster?
-
-Open `./game-minesweeper/src/config.rs` and change `GAME_SPEED` value:
-
-example
-
-```rust
-pub const GAME_SPEED: u16 = 60;
-```
-
-To
-
-```rust
-pub const GAME_SPEED: u16 = 10;
-```
-
-or anything
+---
 
 ### License
 
