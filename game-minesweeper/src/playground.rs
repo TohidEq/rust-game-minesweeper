@@ -215,7 +215,7 @@ impl Playground {
         }
 
         // add bombs
-        let number_of_bombs: u16 = (config::BOMB_RATE * self.cells.len() as u16) / 100;
+        let number_of_bombs: u16 = ((config::BOMB_RATE as u32 * self.cells.len() as u32) / 100) as u16;
         let mut bombs_planted = 0;
 
         while bombs_planted != number_of_bombs {
@@ -333,6 +333,9 @@ impl Playground {
         let cell = self.get_cell_mut(cell_index);
 
         if cell.click != ClickStatus::Noting {
+            return;
+        }
+        if cell.status == CellStatus::Bomb {
             return;
         }
         if cell.status == CellStatus::Safe{
@@ -584,7 +587,7 @@ impl Playground {
             }
         }
 
-        let mut text = String::from(format!("Flags: {}", flag_counter)).white();
+        let mut text = String::from(format!("  Flags: {}", flag_counter)).white();
 
         text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
         text = Colors::bg_color(&config::STATUS_COLOR_BG, text);
@@ -597,9 +600,10 @@ impl Playground {
         y = 1; // ▼
 
         let mut text = String::from(format!(
-            "Total Bombs: {}",
-            ((config::BOMB_RATE * self.cells.len() as u16) / 100) // calc bombs
+            "Total Bombs: {} ", 
+                ((config::BOMB_RATE as u32 * self.cells.len() as u32) / 100) // calc bombs
         ))
+
         .white();
 
         text = Colors::fg_color(&config::STATUS_COLOR_FG, text);
