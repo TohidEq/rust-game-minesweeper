@@ -2,7 +2,9 @@
 
 Minesweeper game (Rust)
 
-![Minesweeper!](./readme-contents/imgs/ss-1.png)
+### Demo Gamepaly (fastforwarded)
+https://github.com/user-attachments/assets/7bf4e6d1-b86c-4c38-ba97-a1261c45a5ab
+
 
 ### Keys:
 
@@ -19,6 +21,8 @@ E: Defuse cell
 F: Flag cell
 
 Q: Exit
+
+> You have no luck on first move? => no problem. First Move (Defuse) on a Bomb Cell -> auto Flag :D  
 
 ## Installation
 
